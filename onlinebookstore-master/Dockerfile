@@ -5,6 +5,6 @@ COPY src ./src
 RUN mvn clean package
 
 FROM tomcat:8.0-jre8
-COPY --from=build /app/target/*.war /usr/local/tomcat/webapps/onlinebookstore.war
+COPY --from=build /app/target/onlinebookstore.war /usr/local/tomcat/webapps/ROOT.war
 EXPOSE 8080
 CMD ["catalina.sh", "run"] 
