@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: onlinebookstore-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: onlinebookstore
+  template:
+    metadata:
+      labels:
+        app: onlinebookstore
+    spec:
+      containers:
+      - name: onlinebookstore
+        image: yourdockerhubusername/onlinebookstore:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_HOST
+          value: "mysql-service"
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: password 

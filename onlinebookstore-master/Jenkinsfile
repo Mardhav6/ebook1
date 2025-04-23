@@ -1,0 +1,62 @@
+pipeline {
+    agent any
+    
+    tools {
+        maven 'Maven 3.8.1'
+    }
+    
+    environment {
+        DOCKER_IMAGE = "yourdockerhubusername/onlinebookstore:${BUILD_NUMBER}"
+        KUBECONFIG = credentials('kubeconfig')
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/your-username/onlinebookstore.git'
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t $DOCKER_IMAGE .'
+            }
+        }
+        
+        stage('Push to Docker Hub') {
+            steps {
+                withDockerRegistry([credentialsId: 'docker-hub-creds', url: '']) {
+                    sh 'docker push $DOCKER_IMAGE'
+                }
+            }
+        }
+        
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh '''
+                    kubectl apply -f mysql-pv.yaml
+                    kubectl apply -f db-secret.yaml
+                    kubectl apply -f mysql-deployment.yaml
+                    sleep 30
+                    kubectl apply -f deployment.yaml
+                    kubectl apply -f service.yaml
+                '''
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
